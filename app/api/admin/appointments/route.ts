@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/admin";
 import { connectMongo } from "@/lib/db";
-import { AppointmentModel, ReservationModel } from "@/lib/models";
+import { AppointmentModel, ReservationModel, type StoredAppointment } from "@/lib/models";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -45,10 +45,10 @@ export async function GET(request: NextRequest) {
     const appointments = await AppointmentModel.find(filter)
       .sort({ startsAt: 1 })
       .limit(51)
-      .lean();
+      .lean<StoredAppointment[]>();
     const hasMore = appointments.length > 50;
     const page = hasMore ? appointments.slice(0, 50) : appointments;
-    const lastAppointment = page.at(-1);
+    const lastAppointment = page.length > 0 ? page[page.length - 1] : undefined;
     const nextCursor = hasMore && lastAppointment
       ? `${lastAppointment.startsAt.toISOString()}|${lastAppointment._id.toString()}`
       : null;

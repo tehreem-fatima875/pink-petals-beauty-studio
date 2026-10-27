@@ -1,6 +1,24 @@
-import { model, models, Schema } from "mongoose";
+import { model, models, Schema, Types, type Model } from "mongoose";
 
-const appointmentSchema = new Schema(
+export type StoredAppointment = {
+  _id: Types.ObjectId;
+  reference: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  serviceId: string;
+  serviceName: string;
+  staffId: string;
+  startsAt: Date;
+  endsAt: Date;
+  notes: string;
+  status: "confirmed" | "cancelled" | "completed";
+  source: "website" | "admin";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const appointmentSchema = new Schema<StoredAppointment>(
   {
     reference: { type: String, required: true, unique: true, index: true },
     customerName: { type: String, required: true, trim: true, maxlength: 80 },
@@ -49,8 +67,9 @@ const reservationSchema = new Schema(
 reservationSchema.index({ staffId: 1, startsAt: 1 }, { unique: true });
 reservationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export const AppointmentModel =
-  models.Appointment || model("Appointment", appointmentSchema);
+export const AppointmentModel: Model<StoredAppointment> =
+  (models.Appointment as Model<StoredAppointment> | undefined) ??
+  model<StoredAppointment>("Appointment", appointmentSchema);
 export const UserModel = models.User || model("User", userSchema);
 export const ReservationModel =
   models.Reservation || model("Reservation", reservationSchema);

@@ -22,7 +22,7 @@ export const bookingSchema = z.object({
 });
 
 export type BookingInput = z.infer<typeof bookingSchema>;
-type StoredAppointment = {
+type LocalStoredAppointment = {
   id: string;
   reference: string;
   customerName: string;
@@ -106,12 +106,12 @@ function canUseDevelopmentStore() {
     || (!hasMongoConfig() && process.env.NODE_ENV !== "production");
 }
 
-async function readLocalAppointments(): Promise<StoredAppointment[]> {
+async function readLocalAppointments(): Promise<LocalStoredAppointment[]> {
   const localStorePath = getLocalStorePath();
   try {
-    const data: unknown = JSON.parse(await readFile(localStorePath, "utf8"));
+    const data: unknown = JSON.parse(await readFile(/* turbopackIgnore: true */ localStorePath, "utf8"));
     if (!Array.isArray(data)) throw new Error("Development appointment store must contain a JSON array.");
-    return data as StoredAppointment[];
+    return data as LocalStoredAppointment[];
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw error;
@@ -234,7 +234,7 @@ export async function createBooking(input: BookingInput) {
       if (!selectedStaff) {
         throw new BookingError("That time was just booked. Please choose another time.", 409);
       }
-      const appointment: StoredAppointment = {
+      const appointment: LocalStoredAppointment = {
         id: randomUUID(),
         reference,
         customerName: input.name,
